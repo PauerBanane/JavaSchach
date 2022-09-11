@@ -2,15 +2,21 @@ package brett;
 
 import figuren.Figur;
 
+import javax.swing.*;
+import javax.swing.border.LineBorder;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+
 /**
  * Diese Klasse repräsentiert ein Schachfeld und dessen Eigenschaften.
  * @author Mike Nipkow
  */
-public class Feld {
+public class Feld extends JButton {
 
-    int y;              // Y-Position auf dem Schachbrett.
-    int x;              // X-Position auf dem Schachbrett.
-    Figur figur;        // Figur, die das Feld besetzt.
+    private final int y;            // Y-Position auf dem Schachbrett.
+    private final int x;            // X-Position auf dem Schachbrett.
+    private Figur figur;            // Figur, die das Feld besetzt.
+    private Color standardFarbe;    // Standardfarbe des Felds, wenn es nicht ausgewählt ist.
 
     /**
      * Konstruktor für das Schachfeld.
@@ -47,6 +53,7 @@ public class Feld {
      */
     public Figur figurEntfernen() {
         Figur aktuelleFigur = this.figur;
+        setIcon(null);
         this.figur = null;
 
         return aktuelleFigur;
@@ -66,5 +73,41 @@ public class Feld {
      */
     public void setFigur(Figur figur) {
         this.figur = figur;
+        if (figur != null) {
+            BufferedImage bild = figur.getBild();
+            setIcon(new ImageIcon(bild));
+        }
+    }
+
+    /**
+     * Setzt die Standardhintergrundfarbe des Felds, wenn es nicht ausgewählt ist.
+     * @param standardFarbe Gewünschte Farbe.
+     */
+    public void setStandardFarbe(Color standardFarbe) {
+        this.standardFarbe = standardFarbe;
+        setBackground(standardFarbe);
+    }
+
+    /**
+     * Methode zum Setzen der Standard-Hintergrundfarbe.
+     */
+    public void resetHintergrundfarbe() {
+        setBackground(standardFarbe);
+    }
+
+    /**
+     * Diese Methode gibt die Y-Position des Feldes auf dem Schachbrett wieder.
+     * @return  Y-Position auf dem Schachbrett.
+     */
+    public int getYPosition() {
+        return this.y;
+    }
+
+    /**
+     * Diese Methode gibt die X-Position des Feldes auf dem Schachbrett wieder.
+     * @return  X-Position auf dem Schachbrett.
+     */
+    public int getXPosition() {
+        return this.x;
     }
 }

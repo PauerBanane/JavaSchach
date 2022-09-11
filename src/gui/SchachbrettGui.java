@@ -1,9 +1,19 @@
 package gui;
 
+import brett.Feld;
+import brett.Schachbrett;
+import figuren.Figur;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Die Klasse SchachbrettGui verwaltet die grafische Oberfläche des Spiels.
@@ -13,13 +23,29 @@ public class SchachbrettGui {
 
     private final Dimension DIMENSION = new Dimension(64, 64);
     private final String SPALTEN_BESCHRIFTUNG = "ABCDEFGH";
+    private Schachbrett schachbrett;
     private JPanel gui = new JPanel();
 
     /**
      * Konstruktor für das Schachbrett-GUI.
      */
-    public SchachbrettGui() {
+    public SchachbrettGui(Schachbrett schachbrett) {
+        this.schachbrett = schachbrett;
+
+        // GUI initialisieren.
         init();
+    }
+
+    public void anzeigen() {
+        JFrame fenster = new JFrame();
+        fenster.setContentPane(getGui());
+
+        fenster.pack();
+        fenster.setMinimumSize(fenster.getSize());
+
+        fenster.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        fenster.setLocationRelativeTo(null);
+        fenster.setVisible(true);
     }
 
     /**
@@ -67,15 +93,28 @@ public class SchachbrettGui {
      */
     private JButton getSchachfeldSchaltfläche(int reihe, int spalte, boolean hellesFeld) {
         // Schaltfläche erstellen.
-        JButton schaltfläche = new JButton();
+        Feld schaltfläche = schachbrett.getFeld(reihe, layoutSpalteZuSchachbrettSpalte(spalte));
         schaltfläche.setBorder(new LineBorder(Color.BLACK));            // Rahmen um das Feld einblenden.
         schaltfläche.setPreferredSize(DIMENSION);                       // Größe der Schaltfläche.
-        schaltfläche.setBackground(hellesFeld ?                         // Farbe des Feldes festlegen.
+        schaltfläche.setStandardFarbe(hellesFeld ?                      // Farbe des Feldes festlegen.
                              Color.GRAY.brighter() :
                              Color.GRAY.darker());
         schaltfläche.setOpaque(true);                                   // Hintergrundfarbe immer anzeigen.
 
-        // TODO: Schachfigur auf dem Feld einlesen und Bild einblenden.
+        /*
+        // Bild der Schachfigur einblenden.
+        Feld feld = schachbrett.getFeld(reihe, layoutSpalteZuSchachbrettSpalte(spalte));
+        Figur figur = feld.getFigur();
+        if (figur != null) {
+            BufferedImage bild = figur.getBild();
+            schaltfläche.setIcon(new ImageIcon(bild));
+        }
+        */
+
+        // Aktion beim Klicken behandeln.
+        schaltfläche.addActionListener(actionEvent -> {
+            schachbrett.aktionBeiFeldauswahl(reihe, layoutSpalteZuSchachbrettSpalte(spalte));
+        });
 
         return schaltfläche;
     }
