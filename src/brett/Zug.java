@@ -47,6 +47,30 @@ public class Zug {
     }
 
     /**
+     * Methode, welche das Feld zurückgibt, auf welchem die Figur vor dem Zug stand.
+     * @return  Anfangsfeld.
+     */
+    public Feld getOriginFeld() {
+        return originFeld;
+    }
+
+    /**
+     * Methode, welche das Feld zurückgibt, auf welches die Figur gezogen wurde.
+     * @return  Zielfeld.
+     */
+    public Feld getZielFeld() {
+        return zielFeld;
+    }
+
+    /**
+     * Methode, welche die gezogene Figur zurückgibt.
+     * @return  Gezogene Figur.
+     */
+    public Figur getFigur() {
+        return figur;
+    }
+
+    /**
      * Methode um rauszufinden, ob bei dem Zug eine Figur geschlagen wurde.
      * @return  Boolean der Auskunft gibt, ob eine Figur geschlagen wurde.
      */

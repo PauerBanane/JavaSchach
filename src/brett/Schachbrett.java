@@ -93,19 +93,19 @@ public class Schachbrett {
     public void aktionBeiFeldauswahl(int y, int x) {
         // Feld und Figur anhand der Position ermitteln.
         Feld feld = getFeld(y, x);
-        Figur figur = feld.getFigur();
+        Figur geklickteFigur = feld.getFigur();
 
         // Aktion, wenn noch kein Feld ausgewählt ist.
         if (ausgewähltesFeld == null) {
             // Abfrage, ob der Spieler eine seiner Figuren angeklickt hat.
-            if (figur == null || figur.getSpielerFarbe() != aktuellAnDerReihe)
+            if (geklickteFigur == null || geklickteFigur.getSpielerFarbe() != aktuellAnDerReihe)
                 return;
 
             ausgewähltesFeld = feld;
             feld.setBackground(Color.GREEN.darker());
 
             // Mögliche Züge abrufen, um diese zu markieren.
-            List<Feld> möglicheZüge = figur.getMöglicheZüge(this);
+            List<Feld> möglicheZüge = geklickteFigur.getMöglicheZüge(this);
             zügeMarkieren(möglicheZüge);
         }
         // Aktion, wenn bereits ein Feld ausgewählt wurde.
@@ -118,13 +118,15 @@ public class Schachbrett {
             }
 
             // Markierung ändern, wenn der Spieler eine andere Figur von sich auswählt.
-            if (figur != null && figur.getSpielerFarbe() == aktuellAnDerReihe) {
+            // Falls diese Figur auch markiert ist, wird dies nicht ausgeführt, da es sich dann um eine Rochade handelt.
+            if (geklickteFigur != null && geklickteFigur.getSpielerFarbe() == aktuellAnDerReihe &&
+                    !feld.istMarkiert()) {
                 alleMarkierungenEntfernen();
                 ausgewähltesFeld = feld;
                 feld.setBackground(Color.GREEN.darker());
 
                 // Mögliche Züge abrufen, um diese zu markieren.
-                List<Feld> möglicheZüge = figur.getMöglicheZüge(this);
+                List<Feld> möglicheZüge = geklickteFigur.getMöglicheZüge(this);
                 zügeMarkieren(möglicheZüge);
                 return;
             }
@@ -136,23 +138,96 @@ public class Schachbrett {
             if (!möglicheZüge.contains(feld))
                 return;
 
-            // Figur bekommen, die ggf. geschlagen wird.
-            Figur geschlageneFigur = feld.getFigur();
+            // EnPassante auswerten. Wenn enPassanteFeld nicht null ist, muss die Figur auf diesem Feld entfernt werden.
+            if (ausgewähltesFeld.getFigur() instanceof Bauer) {
+                Feld enPassanteFeld = schlägtEnPassante(ausgewähltesFeld.getFigur(), feld);
+                if (enPassanteFeld != null)
+                    enPassanteFeld.figurEntfernen();
+            }
 
-            // Figur auf das neue Feld setzen.
-            feld.setFigur(ausgewähltesFeld.figurEntfernen());
+            // Rochade auswerten.
+            // Bei einer Rochade wird der entsprechende Turm markiert, statt dem Feld auf dass der König gehen soll.
+            // Daher muss hier eine andere Behandlung der gesetzten und entfernten Figuren erfolgen.
+            if (ausgewähltesFeld.getFigur() instanceof König &&
+                    feld.getFigur() != null && feld.getFigur() instanceof Turm) {
+                Richtung richtung = ausgewähltesFeld.getXPosition() > feld.getXPosition() ?
+                        Richtung.LINKS : Richtung.RECHTS;
+                // Neue Felder für König und Turm bekommen.
+                Feld neuesTurmFeld = getFeld(ausgewähltesFeld, richtung);
+                Feld neuesKönigFeld = getFeld(neuesTurmFeld, richtung);
 
-            // Figur als 'wurde gezogen' markieren.
-            feld.getFigur().setWurdeGezogen();
+                // Figuren entfernen und auf neuem Feld platzieren.
+                neuesKönigFeld.setFigur(ausgewähltesFeld.figurEntfernen());
+                neuesTurmFeld.setFigur(feld.figurEntfernen());
 
-            // Zug erstellen und dokumentieren.
-            Zug zug = new Zug(feld.getFigur(), geschlageneFigur, ausgewähltesFeld, feld);
-            ausgeführteZüge.add(zug);
+                // Als 'wurde gezogen' markieren.
+                neuesKönigFeld.getFigur().setWurdeGezogen();
+                neuesTurmFeld.getFigur().setWurdeGezogen();
+
+                // Zug erstellen und dokumentieren.
+                Zug zug = new Zug(neuesKönigFeld.getFigur(), null, ausgewähltesFeld, neuesKönigFeld);
+                ausgeführteZüge.add(zug);
+            }
+            else {// Figur bekommen, die ggf. geschlagen wird.
+                Figur geschlageneFigur = feld.getFigur();
+
+                // Figur auf das neue Feld setzen.
+                feld.setFigur(ausgewähltesFeld.figurEntfernen());
+
+                // Figur als 'wurde gezogen' markieren.
+                feld.getFigur().setWurdeGezogen();
+
+                // Zug erstellen und dokumentieren.
+                Zug zug = new Zug(feld.getFigur(), geschlageneFigur, ausgewähltesFeld, feld);
+                ausgeführteZüge.add(zug);
+            }
 
             alleMarkierungenEntfernen();
             ausgewähltesFeld = null;
             aktuellAnDerReihe = aktuellAnDerReihe == SpielerFarbe.WEISS ? SpielerFarbe.SCHWARZ : SpielerFarbe.WEISS;
         }
+    }
+
+    /**
+     * Diese Methode wertet aus, ob ein Feld 'ziel' diagonal vom Feld 'origin' liegt.
+     * Das ist für die Auswertung von EnPassante wichtig, da ein Bauer immer EnPassante schlägt, wenn
+     * er sich diagonal bewegt und auf dem 'ziel'-Feld keine Figur steht.
+     * @param figur     Figur, die gezogen wird.
+     * @param ziel      Feld, auf das die Figur gezogen wird.
+     * @return          Das Feld von dem Bauern, der EnPassante geschlagen wurde,
+     *                  oder null, wenn nicht EnPassante geschlagen wurde.
+     */
+    private Feld schlägtEnPassante(Figur figur, Feld ziel) {
+        // Auswertung, ob Parameter stimmen.
+        if (figur == null || ziel == null)
+            throw new NullPointerException("Einer der Parameter hat keinen Wert.");
+
+        // Abfrage, ob die Figur noch im Spiel ist.
+        Feld origin = getFeld(figur);
+        if (origin == null)
+            throw new IllegalArgumentException("Die Figur ist nicht mehr im Spiel.");
+
+        // Auswertung, ob die Figur ein Bauer ist. Wenn nicht, false zurückgeben.
+        if (!(figur instanceof Bauer))
+            return null;
+
+        // Auswertung, ob der Bauer diagonal gezogen wird. Wenn nicht, false zurückgeben.
+        if (origin.getX() == ziel.getX())
+            return null;
+
+        // Unterscheiden zwischen normalem Schlagen einer Figur und EnPassante:
+        // Wenn auf dem Zielfeld keine Figur steht, wurde EnPassante geschlagen.
+        if (ziel.getFigur() != null)
+            return null;
+
+        // Feld von dem Bauern bekommen, der EnPassante geschlagen wird.
+        Feld enPassanteFeld = getFeld(origin.getYPosition(), ziel.getXPosition());
+
+        // Wenn auf dem enPassanteFeld kein Bauer steht, ist ein Fehler bei der Auswahl möglicher Züge aufgetreten.
+        if (enPassanteFeld == null || enPassanteFeld.getFigur() == null || !(enPassanteFeld.getFigur() instanceof Bauer))
+            throw new IllegalStateException("Bei der Auswahl möglicher Züge ist ein Fehler aufgetreten.");
+
+        return enPassanteFeld;
     }
 
     /**
@@ -162,7 +237,7 @@ public class Schachbrett {
     private void zügeMarkieren(List<Feld> möglicheZüge) {
         // Durch alle Züge gehen und die markieren.
         for (Feld möglichesFeld : möglicheZüge) {
-            if (möglichesFeld.getFigur() == null)
+            if (möglichesFeld.getFigur() == null || möglichesFeld.getFigur().getSpielerFarbe() == aktuellAnDerReihe)
                 möglichesFeld.setBackground(Color.YELLOW.darker());
             else
                 möglichesFeld.setBackground(Color.RED.darker());

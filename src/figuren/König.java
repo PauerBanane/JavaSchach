@@ -41,6 +41,34 @@ public class König extends Figur {
             möglicheZüge.add(feld);
         }
 
+        // Auswertung der Rochade. Nur, wenn der König noch nicht gezogen wurde.
+        if (!wurdeGezogen()) {
+            // Für Links und Rechts Auswertung wiederholen.
+            for (Richtung richtung : Richtung.getHorizontaleRichtungen()) {
+                // Aktuelles Feld, das ausgewertet wird.
+                Feld feld = schachbrett.getFeld(aktuellesFeld, richtung);
+
+                // Prüfen, ob die Felder links und/oder rechts bis zum Turm frei sind.
+                while (feld != null) {
+
+                    // Abbrechen, wenn auf dem Feld eine Figur steht, die kein Turm ist,
+                    // oder wenn der Turm schon gezogen hat.
+                    Figur figurAufDemFeld = feld.getFigur();
+                    if (figurAufDemFeld != null &&
+                            (!(figurAufDemFeld instanceof Turm) || figurAufDemFeld.wurdeGezogen()))
+                        break;
+
+                    // Feld des Turms als möglichen Zug hinzufügen, damit der Anwender erkennt, dass er rochieren kann.
+                    // Nur, wenn auf dem Feld eine Figur steht.
+                    if (figurAufDemFeld != null)
+                        möglicheZüge.add(feld);
+
+                    // Nächstes Feld.
+                    feld = schachbrett.getFeld(feld, richtung);
+                }
+            }
+        }
+
         return möglicheZüge;
     }
 }

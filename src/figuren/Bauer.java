@@ -2,6 +2,7 @@ package figuren;
 
 import brett.Feld;
 import brett.Schachbrett;
+import brett.Zug;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -75,6 +76,43 @@ public class Bauer extends Figur {
                 einFeldDiagonalVorneRechts.getFigur() != null &&
                 einFeldDiagonalVorneRechts.getFigur().getSpielerFarbe() != this.spielerFarbe)
             möglicheZüge.add(einFeldDiagonalVorneRechts);
+
+        // Auswerten, ob ein Bauer EnPassante geschlagen werden kann.
+        // Dazu erst prüfen, ob dies der erste Zug ist.
+        Zug letzterZug = schachbrett.getLetztenZug();
+
+        if (letzterZug != null && letzterZug.getFigur() instanceof Bauer) {
+            // Überprüfen, ob der Bauer im letzten Zug zwei Feld gezogen hat.
+            int originYPosition = letzterZug.getOriginFeld().getYPosition();    // Reihe, vor dem letzten Zug.
+            int zielYPosition = letzterZug.getZielFeld().getYPosition();        // Reihe, nach dem letzten Zug.
+            int anzahlGezogenerFelder = Math.abs(originYPosition - zielYPosition);
+
+            // Weitere Überprüfung nur fortsetzen, wenn der Bauer im letzten Zug zwei Felder weit gezogen wurde.
+            if (anzahlGezogenerFelder == 2) {
+                // Nun die Felder links und rechts auf gegnerischen Bauern überprüfen.
+                Feld einFeldLinks = schachbrett.getFeld(aktuellesFeld, Richtung.LINKS);
+                Feld einFeldRechts = schachbrett.getFeld(aktuellesFeld, Richtung.RECHTS);
+
+                // Auswertung, ob die Felder existieren und ob dort gegnerische Bauern stehen.
+                if (einFeldLinks != null && einFeldLinks.getFigur() != null &&
+                        einFeldLinks.getFigur() instanceof Bauer &&
+                        einFeldLinks.getFigur().getSpielerFarbe() != spielerFarbe) {
+
+                    // Abfrage, ob die Figur, die letzten Zug gezogen wurde, der entsprechende Bauer ist.
+                    if (letzterZug != null && letzterZug.getFigur() == einFeldLinks.getFigur())
+                        möglicheZüge.add(einFeldDiagonalVorneLinks);
+                }
+                else if (einFeldRechts != null && einFeldRechts.getFigur() != null &&
+                        einFeldRechts.getFigur() instanceof Bauer &&
+                        einFeldRechts.getFigur().getSpielerFarbe() != spielerFarbe) {
+
+                    // Abfrage, ob die Figur, die letzten Zug gezogen wurde, der entsprechende Bauer ist.
+                    if (letzterZug != null && letzterZug.getFigur() == einFeldRechts.getFigur())
+                        möglicheZüge.add(einFeldDiagonalVorneRechts);
+                }
+            }
+        }
+
 
         return möglicheZüge;
     }

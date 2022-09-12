@@ -19,12 +19,20 @@ public enum Richtung {
     private static Richtung[] diagonaleRichtungen = {VORNE_RECHTS, HINTEN_RECHTS, HINTEN_LINKS, VORNE_LINKS};
     private static Richtung[] horizontaleUndVertikaleRichtungen = {VORNE, RECHTS, HINTEN, LINKS};
 
+    private static Richtung[] horizontaleRichtungen = {LINKS, RECHTS};
+
+    private static Richtung[] vertikaleRichtungen = {VORNE, HINTEN};
+
     public static Richtung[] getDiagonaleRichtungen() {
         return diagonaleRichtungen;
     }
 
     public static Richtung[] getHorizontaleUndVertikaleRichtungen() {
         return horizontaleUndVertikaleRichtungen;
+    }
+
+    public static Richtung[] getHorizontaleRichtungen() {
+        return horizontaleRichtungen;
     }
 
     public boolean istVertikal() {

@@ -3,7 +3,6 @@ package brett;
 import figuren.Figur;
 
 import javax.swing.*;
-import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
@@ -17,6 +16,7 @@ public class Feld extends JButton {
     private final int x;            // X-Position auf dem Schachbrett.
     private Figur figur;            // Figur, die das Feld besetzt.
     private Color standardFarbe;    // Standardfarbe des Felds, wenn es nicht ausgewählt ist.
+    private boolean markiert;       // Boolean der angibt, ob das Feld aktuell markiert ist.
 
     /**
      * Konstruktor für das Schachfeld.
@@ -93,6 +93,17 @@ public class Feld extends JButton {
      */
     public void resetHintergrundfarbe() {
         setBackground(standardFarbe);
+        markiert = false;
+    }
+
+    /**
+     * Diese Methode setzt die Hintergrundfarbe des Feld und markiert diese Änderung in dem Objekt.
+     * @param bg the desired background <code>Color</code>
+     */
+    @Override
+    public void setBackground(Color bg) {
+        super.setBackground(bg);
+        markiert = true;
     }
 
     /**
@@ -109,5 +120,13 @@ public class Feld extends JButton {
      */
     public int getXPosition() {
         return this.x;
+    }
+
+    /**
+     * Diese Methode gibt an, ob das Feld aktuell markiert ist.
+     * @return  Auswertung, ob das Feld markiert ist oder nicht.
+     */
+    public boolean istMarkiert() {
+        return markiert;
     }
 }
